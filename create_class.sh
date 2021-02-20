@@ -80,16 +80,54 @@ echo "};
 #endif" >> $1.hpp
 echo "$1.hpp created"
 
+INC=0
+
 #Creating cpp file...
 
-echo "#include "$1.hpp"
+echo "#include $1.hpp
+" > $1.cpp
 
-$1::$1(std::string name, std::string color, std::string state)
-{
-	this->name = name;
-	this->color = color;
-	this->state = state;
-	std::cout << "created" << std::endl;
+echo -n "$1::$1(" >> $1.cpp
+
+if [ $# -gt 1 ]
+then
+	for var in "$@"
+	do
+		if [ $INC -gt 0 ]
+		then
+			ARR=(${var//#/ })
+			if [ $INC -gt 1 ]
+			then
+				echo -n ", " >> $1.cpp
+			fi
+			echo -n "${ARR[0]} ${ARR[1]}" >> $1.cpp
+		fi
+		let "INC++"
+	done
+	echo ")" >> $1.cpp
+else
+	echo "void)" >> $1.cpp
+fi
+echo "{" >> $1.cpp
+
+INC=0
+
+if [ $# -gt 1 ]
+then
+	for var in "$@"
+	do
+		if [ $INC -gt 0 ]
+		then
+			ARR=(${var//#/ })
+			echo "	this->${ARR[1]} = ${ARR[1]};" >> $1.cpp
+		fi
+		let "INC++"
+	done
+fi
+
+INC=0
+
+echo "	std::cout << "created" << std::endl;
 	return ;
 }
 
@@ -97,20 +135,26 @@ $1::~$1(void)
 {
 	std::cout << "delete" << std::endl;
 	return ;
-}
+}" >> $1.cpp
 
-std::string	$1::getName(void)
+if [ $# -gt 1 ]
+then
+	for var in "$@"
+	do
+		if [ $INC -gt 0 ]
+		then
+			ARR=(${var//#/ })
+			ARG1=${ARR[1]}
+			LETTER=$(echo ${ARG1:0:1} | tr a-z A-Z)
+			CAMELCASE=$(echo -n $LETTER ; echo ${ARR[1]} | cut -c 2-)
+			echo "
+${ARR[0]}	$1::get${CAMELCASE}(void)
 {
-	return this->name;
-}
+	return this->${ARR[1]};
+}" >> $1.cpp
+		fi
+		let "INC++"
+	done
+fi
 
-std::string	$1::getColor(void)
-{
-	return this->color;
-}
-
-std::string	$1::getState(void)
-{
-	return this->state;
-}" > $1.cpp
 echo "$1.cpp created"
