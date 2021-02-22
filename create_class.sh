@@ -84,7 +84,7 @@ INC=0
 
 #Creating cpp file...
 
-echo "#include $1.hpp
+echo "#include \"$1.hpp\"
 " > $1.cpp
 
 echo -n "$1::$1(" >> $1.cpp
