@@ -20,6 +20,11 @@ echo "#ifndef ${MAJ}_HPP
 class $1 {
 	public:" > $1.hpp
 
+if [ $# -gt 1 ]
+then
+	echo "		${1}(void);" >> $1.hpp
+fi
+
 echo -n	"		${1}" >> $1.hpp
 
 if [ $# -gt 1 ]
@@ -43,7 +48,11 @@ else
 	echo "(void);" >> $1.hpp
 fi
 
-echo	"		~${1}(void);" >> $1.hpp
+echo "		${1}(const ${1} &src);" >> $1.hpp
+
+echo "		~${1}(void);" >> $1.hpp
+
+echo "		${1}	&operator=(const ${1} &rhs);" >> $1.hpp
 
 INC=0
 
@@ -86,6 +95,16 @@ INC=0
 
 echo "#include \"$1.hpp\"
 " > $1.cpp
+
+if [ $# -gt 1 ]
+then
+	echo "$1::$1(void)
+{
+	std::cout << \"$1 created\" << std::endl;
+	return ;
+}
+" >> $1.cpp
+fi
 
 echo -n "$1::$1(" >> $1.cpp
 
@@ -137,10 +156,23 @@ echo "
 	return ;
 }
 
+$1::$1(const ${1} &src)
+{
+	*this = src;
+	std::cout << \"$1 copied\" << std::endl;
+	return ;
+}
+
 $1::~$1(void)
 {
 	std::cout << \"$1 deleted\" << std::endl;
 	return ;
+}
+
+${1}	&$1::operator=(const ${1} &rhs)
+{
+	*this = rhs;
+	std::cout << \"$1 modified\" << std::endl;
 }" >> $1.cpp
 
 if [ $# -gt 1 ]
