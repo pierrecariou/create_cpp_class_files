@@ -66,7 +66,7 @@ then
 			ARG1=${ARR[1]}
 			LETTER=$(echo ${ARG1:0:1} | tr a-z A-Z)
 			CAMELCASE=$(echo -n $LETTER ; echo ${ARR[1]} | cut -c 2-) 
-			echo "		${ARR[0]}	get${CAMELCASE}(void);" >> $1.hpp
+			echo "		${ARR[0]}	get${CAMELCASE}(void) const;" >> $1.hpp
 		fi
 		let "INC++"
 	done
@@ -170,9 +170,28 @@ $1::~$1(void)
 }
 
 ${1}	&$1::operator=(const ${1} &rhs)
-{
-	*this = rhs;
-	std::cout << \"$1 modified\" << std::endl;
+{" >> $1.cpp
+
+if [ $# -gt 1 ]
+	then
+	echo "	if (this != &rhs)
+	{" >> $1.cpp
+	for var in "$@"
+	do
+		if [ $INC -gt 0 ]
+		then
+			ARR=(${var//#/ })
+			echo "		this->${ARR[1]} = rhs.${ARR[1]};" >> $1.cpp
+		fi
+		let "INC++"
+	done
+fi
+
+INC=0
+
+echo "	}
+	std::cout << \"$1 assigned\" << std::endl;
+	return (*this);
 }" >> $1.cpp
 
 if [ $# -gt 1 ]
@@ -186,7 +205,7 @@ then
 			LETTER=$(echo ${ARG1:0:1} | tr a-z A-Z)
 			CAMELCASE=$(echo -n $LETTER ; echo ${ARR[1]} | cut -c 2-)
 			echo "
-${ARR[0]}	$1::get${CAMELCASE}(void)
+${ARR[0]}	$1::get${CAMELCASE}(void) const
 {
 	return this->${ARR[1]};
 }" >> $1.cpp
